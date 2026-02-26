@@ -87,7 +87,10 @@ export function DataList({ data, title }: { data: any, title: string }) {
             <div key={key} className="contents">
               <span className="text-slate-500 font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
               <span className="text-slate-900 font-bold text-right">
-                {typeof value === 'number' ? Number(value).toLocaleString() : String(value)}
+                {key === 'shape' && Array.isArray(value) 
+                  ? value.map((v: any, i: number) => `(E:${v.e}, A:${v.a})${i < value.length - 1 ? ', ' : ''}`)
+                  : typeof value === 'number' ? Number(value).toLocaleString() : String(value)
+                }
                 {unitStr && <span className="ml-0.5 text-[9px] font-normal text-slate-400">{unitStr}</span>}
               </span>
             </div>
