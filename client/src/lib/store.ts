@@ -36,6 +36,7 @@ interface NodeData extends Record<string, unknown> {
   schedulePoints?: { time: number; flow: number }[];
   tankTop?: number;
   tankBottom?: number;
+  shape?: { e: number; a: number }[];
 }
 
 interface EdgeData extends Record<string, unknown> {

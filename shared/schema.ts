@@ -45,8 +45,12 @@ export const surgeTankPropsSchema = z.object({
   tankTop: z.number(),
   tankBottom: z.number(),
   diameter: z.number(),
-  celerity: z.number(),
-  friction: z.number(),
+  celerity: z.number().default(0),
+  friction: z.number().default(0),
+  shape: z.array(z.object({
+    e: z.number(),
+    a: z.number()
+  })).optional(),
   comment: z.string().optional(),
 });
 

@@ -337,6 +337,91 @@ export function PropertiesPanel() {
                   onChange={(e) => handleChange('diameter', e.target.value)} 
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="st-celerity">Celerity ({currentUnit === 'SI' ? 'm/s' : 'ft/s'})</Label>
+                  <Input 
+                    id="st-celerity" 
+                    type="number" 
+                    value={element.data?.celerity || 0} 
+                    onChange={(e) => handleChange('celerity', e.target.value)} 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="st-friction">Friction</Label>
+                  <Input 
+                    id="st-friction" 
+                    type="number" 
+                    step="0.0001"
+                    value={element.data?.friction || 0} 
+                    onChange={(e) => handleChange('friction', e.target.value)} 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3 mt-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">Shape (E, A pairs)</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-7 px-2"
+                    onClick={() => {
+                      const shape = (element.data?.shape as any[]) || [];
+                      handleChange('shape', [...shape, { e: 0, a: 0 }]);
+                    }}
+                  >
+                    Add Pair
+                  </Button>
+                </div>
+                
+                <div className="space-y-2">
+                  {((element.data?.shape as any[]) || []).map((pair, index) => (
+                    <div key={index} className="flex items-end gap-2 p-2 border rounded-md bg-muted/30 relative group">
+                      <div className="grid gap-1 flex-1">
+                        <Label className="text-[10px]">E ({currentUnit === 'SI' ? 'm' : 'ft'})</Label>
+                        <Input 
+                          type="number"
+                          className="h-7 text-xs"
+                          value={pair.e}
+                          onChange={(e) => {
+                            const newShape = [...(element.data?.shape as any[])];
+                            newShape[index] = { ...newShape[index], e: parseFloat(e.target.value) || 0 };
+                            handleChange('shape', newShape);
+                          }}
+                        />
+                      </div>
+                      <div className="grid gap-1 flex-1">
+                        <Label className="text-[10px]">A ({currentUnit === 'SI' ? 'm²' : 'ft²'})</Label>
+                        <Input 
+                          type="number"
+                          className="h-7 text-xs"
+                          value={pair.a}
+                          onChange={(e) => {
+                            const newShape = [...(element.data?.shape as any[])];
+                            newShape[index] = { ...newShape[index], a: parseFloat(e.target.value) || 0 };
+                            handleChange('shape', newShape);
+                          }}
+                        />
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => {
+                          const newShape = (element.data?.shape as any[]).filter((_, i) => i !== index);
+                          handleChange('shape', newShape);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  {(!element.data?.shape || (element.data.shape as any[]).length === 0) && (
+                    <p className="text-[10px] text-muted-foreground text-center py-2 italic">No shape pairs added.</p>
+                  )}
+                </div>
+              </div>
             </>
           )}
 

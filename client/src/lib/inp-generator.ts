@@ -255,10 +255,20 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
     const unit = d.unit || globalUnit;
     addComment(d.comment);
     addL('SURGETANK ');
-    addL(` ID ${d.label} SIMPLE`);
-    addL(` ELTOP ${toFPS(Number(d.tankTop), unit, 'elevation')}`);
+    addL(` ID ${d.label}`);
     addL(` ELBOTTOM ${toFPS(Number(d.tankBottom), unit, 'elevation')}`);
-    addL(` DIAM ${toFPS(Number(d.diameter), unit, 'diameter')}`);
+    addL(` ELTOP ${toFPS(Number(d.tankTop), unit, 'elevation')}`);
+    
+    if (d.shape && Array.isArray(d.shape) && d.shape.length > 0) {
+      addL(' SHAPE');
+      d.shape.forEach((pair: any) => {
+        addL(`   E  ${toFPS(Number(pair.e), unit, 'elevation')}`);
+        addL(`   A  ${toFPS(Number(pair.a), unit, 'area')}`);
+      });
+    } else {
+      addL(` DIAM ${toFPS(Number(d.diameter), unit, 'diameter')}`);
+    }
+
     addL(` CELERITY ${toFPS(Number(d.celerity), unit, 'celerity')}`);
     addL(` FRICTION ${d.friction}`);
     addL('FINISH');
