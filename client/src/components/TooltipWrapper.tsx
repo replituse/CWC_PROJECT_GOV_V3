@@ -58,6 +58,9 @@ export function DataList({ data, title }: { data: any, title: string }) {
       if (key === 'diameter' && data.hasShape) return false;
       if (key === 'shape' && !data.hasShape) return false;
       if ((key === 'cplus' || key === 'cminus') && !data.hasAddedLoss) return false;
+
+      // Filter out duplicate/mismatched property names
+      if (key === 'topElevation' || key === 'bottomElevation') return false;
     }
 
     // Flow Boundary specific filtering
@@ -128,7 +131,7 @@ export function DataList({ data, title }: { data: any, title: string }) {
               <span className="text-slate-900 font-bold text-right">
                 {key === 'shape' && Array.isArray(value) 
                   ? value.map((v: any, i: number) => `(E:${v.e}, A:${v.a})${i < value.length - 1 ? ', ' : ''}`)
-                  : typeof value === 'number' ? Number(value).toLocaleString() : String(value)
+                  : (typeof value === 'number' ? value : String(value))
                 }
                 {unitStr && <span className="ml-0.5 text-[9px] font-normal text-slate-400">{unitStr}</span>}
               </span>
