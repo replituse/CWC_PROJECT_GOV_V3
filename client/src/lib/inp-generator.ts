@@ -242,9 +242,18 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
     if (!d) return;
     const unit = d.unit || globalUnit;
     addComment(d.comment);
-    addL(`CONDUIT ID ${d.label || e.id} `);
-    addL(' DUMMY ');
-    addL(` DIAMETER ${toFPS(Number(d.diameter), unit, 'diameter')}`);
+    
+    const diamValue = parseFloat(String(d.diameter));
+    const hasValidDiameter = d.diameter !== undefined && d.diameter !== null && d.diameter !== '' && !isNaN(diamValue) && diamValue !== 0;
+
+    if (!hasValidDiameter) {
+      addL(`CONDUIT ID ${d.label || e.id} DUMMY`);
+    } else {
+      addL(`CONDUIT ID ${d.label || e.id} `);
+      addL(' DUMMY ');
+      addL(` DIAMETER ${toFPS(Number(d.diameter), unit, 'diameter')}`);
+    }
+
     if (d.hasAddedLoss) {
       addL(' ADDEDLOSS ');
       addL(` CPLUS ${d.cplus || 0}`);
