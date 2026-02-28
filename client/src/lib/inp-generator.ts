@@ -256,10 +256,10 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
     if (!d) return;
     const unit = d.unit || globalUnit;
     addComment(d.comment);
-    addL('SURGETANK ');
+    addL('SURGETANK');
     addL(` ID ${d.label} ${d.type_st || 'SIMPLE'}`);
-    addL(` ELBOTTOM ${toFPS(Number(d.tankBottom), unit, 'elevation')}`);
     addL(` ELTOP ${toFPS(Number(d.tankTop), unit, 'elevation')}`);
+    addL(` ELBOTTOM ${toFPS(Number(d.tankBottom), unit, 'elevation')}`);
 
     if (d.type_st === 'AIRTANK' || d.type_st === 'DIFFERENTIAL') {
       if (d.initialWaterLevel !== undefined) {
