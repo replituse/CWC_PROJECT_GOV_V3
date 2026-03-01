@@ -235,6 +235,35 @@ export function generateSystemDiagramSVG(nodes: WhamoNode[], edges: WhamoEdge[],
     }
   });
 
+  // Add Legend/Indicator Box
+  const legendY = svgHeight - 60;
+  const legendX = 80;
+  svgContent += `
+    <g transform="translate(${legendX}, ${legendY})">
+      <rect x="-10" y="-10" width="600" height="50" fill="white" fill-opacity="0.9" rx="8" stroke="#ecf0f1" stroke-width="1" />
+      
+      <g transform="translate(0, 15)">
+        <rect x="0" y="-8" width="20" height="16" fill="#3498db" rx="2" />
+        <text x="25" y="5" font-size="12" fill="#7f8c8d" font-weight="bold">RESERVOIR</text>
+      </g>
+      
+      <g transform="translate(130, 15)">
+        <rect x="0" y="-10" width="15" height="20" fill="#f39c12" rx="2" />
+        <text x="20" y="5" font-size="12" fill="#7f8c8d" font-weight="bold">SURGE TANK</text>
+      </g>
+      
+      <g transform="translate(260, 15)">
+        <circle cx="8" cy="0" r="8" fill="#e74c3c" />
+        <text x="22" y="5" font-size="12" fill="#7f8c8d" font-weight="bold">NODE/JUNCTION</text>
+      </g>
+      
+      <g transform="translate(410, 15)">
+        <path d="M 0 -8 L 20 0 L 0 8 Z" fill="#2ecc71" />
+        <text x="25" y="5" font-size="12" fill="#7f8c8d" font-weight="bold">FLOW BOUNDARY</text>
+      </g>
+    </g>
+  `;
+
   svgContent += `</svg>`;
   return svgContent;
 }
