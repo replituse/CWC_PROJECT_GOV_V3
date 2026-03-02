@@ -200,14 +200,14 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
       const dataUpdate: any = {};
       Object.entries(node.data || {}).forEach(([key, value]) => {
         if ((typeof value === 'number' || (typeof value === 'string' && value.trim() !== '' && !isNaN(Number(value)))) && fieldMapping[key]) {
-          dataUpdate[key] = Number(convertValue(value as any, oldUnit, unit, fieldMapping[key]).toFixed(8));
+          dataUpdate[key] = Math.round(convertValue(value as any, oldUnit, unit, fieldMapping[key]) * 10000) / 10000;
         }
       });
 
       if (node.data?.schedulePoints) {
         dataUpdate.schedulePoints = (node.data.schedulePoints as any[]).map(p => ({
           ...p,
-          flow: Number(convertValue(p.flow, oldUnit, unit, 'flow').toFixed(8))
+          flow: Math.round(convertValue(p.flow, oldUnit, unit, 'flow') * 10000) / 10000
         }));
       }
 
@@ -223,7 +223,7 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
       const dataUpdate: any = {};
       Object.entries(edge.data || {}).forEach(([key, value]) => {
         if ((typeof value === 'number' || (typeof value === 'string' && value.trim() !== '' && !isNaN(Number(value)))) && fieldMapping[key]) {
-          dataUpdate[key] = Number(convertValue(value as any, oldUnit, unit, fieldMapping[key]).toFixed(8));
+          dataUpdate[key] = Math.round(convertValue(value as any, oldUnit, unit, fieldMapping[key]) * 10000) / 10000;
         }
       });
 
