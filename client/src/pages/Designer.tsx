@@ -680,12 +680,12 @@ function DesignerInner() {
                       >
                         <div 
                           id="system-diagram-container"
-                          className="bg-white shadow-2xl rounded-2xl border border-slate-200 p-20"
+                          className="bg-white shadow-2xl rounded-2xl border border-slate-200 p-24"
                           style={{ 
                             width: "max-content", 
                             height: "max-content",
-                            minWidth: "1200px",
-                            minHeight: "800px"
+                            minWidth: "1600px",
+                            minHeight: "1200px"
                           }}
                           dangerouslySetInnerHTML={{ __html: diagramSvg || '' }} 
                         />
