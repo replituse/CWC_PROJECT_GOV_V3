@@ -136,8 +136,13 @@ export function validateNetwork(nodes: WhamoNode[], edges: WhamoEdge[]): { error
       if (connections.length !== 1) {
         addError(n.id, `Flow Boundary ${d.label} must connect to exactly one node.`, d.label, n.type);
       }
-      if (d.scheduleNumber === undefined) {
+      if (d.scheduleNumber === undefined || d.scheduleNumber === '') {
         addError(n.id, `Flow Boundary ${d.label} missing Q-Schedule.`, d.label, n.type);
+      }
+      
+      const points = d.schedulePoints || [];
+      if (points.length === 0) {
+        addError(n.id, `Flow Boundary ${d.label} must have at least one Q-Schedule point.`, d.label, n.type);
       }
     }
 
