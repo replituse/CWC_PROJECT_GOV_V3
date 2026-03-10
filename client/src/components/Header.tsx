@@ -597,18 +597,41 @@ export function Header({
                             
                             // Add requests for all nodes
                             nodes.forEach(node => {
+                              const isSurgeTank = node.data.type === 'surgeTank';
+                              
                               types.forEach(type => {
-                                const exists = outputRequests.some(req => 
+                                // Regular node request
+                                const existsNode = outputRequests.some(req => 
                                   req.elementId === node.id && 
-                                  req.requestType === type
+                                  req.requestType === type &&
+                                  req.isElement === false
                                 );
-                                if (!exists) {
+                                if (!existsNode) {
                                   addOutputRequest({
                                     elementId: node.id,
                                     elementType: "node",
                                     requestType: type,
+                                    isElement: false,
                                     variables: [...variables]
                                   });
+                                }
+
+                                // If it's a surge tank, also add the ELEM request
+                                if (isSurgeTank) {
+                                  const existsElem = outputRequests.some(req => 
+                                    req.elementId === node.id && 
+                                    req.requestType === type &&
+                                    req.isElement === true
+                                  );
+                                  if (!existsElem) {
+                                    addOutputRequest({
+                                      elementId: node.id,
+                                      elementType: "node",
+                                      requestType: type,
+                                      isElement: true,
+                                      variables: [...variables]
+                                    });
+                                  }
                                 }
                               });
                             });
@@ -625,6 +648,7 @@ export function Header({
                                     elementId: edge.id,
                                     elementType: "edge",
                                     requestType: type,
+                                    isElement: true,
                                     variables: [...variables]
                                   });
                                 }
