@@ -92,21 +92,27 @@ export function PropertiesPanel() {
 
     const dataUpdate: any = { unit: newUnit, _unitCache: newCache };
 
-    // Check if we have cached values for the target unit
-    const cachedTarget = newCache[newUnit];
-    if (cachedTarget && Object.values(cachedTarget).some(v => v !== undefined)) {
-      Object.entries(cachedTarget).forEach(([key, val]) => {
-        if (val !== undefined) dataUpdate[key] = val;
-      });
-    } else {
-      // No cache — convert mathematically
-      Object.entries(element.data || {}).forEach(([key, value]) => {
+    // For each convertible field: use cached value if defined, otherwise math-convert.
+    // This ensures fields edited after the last cache save are always converted correctly.
+    const cachedTarget: Record<string, any> = newCache[newUnit] || {};
+    Object.entries(element.data || {}).forEach(([key, value]) => {
+      if (!fieldMapping[key]) return;
+      const cachedVal = cachedTarget[key];
+      if (cachedVal !== undefined) {
+        dataUpdate[key] = cachedVal;
+      } else {
         const numValue = typeof value === 'string' ? parseFloat(value) : (typeof value === 'number' ? value : NaN);
-        if (!isNaN(numValue) && fieldMapping[key]) {
+        if (!isNaN(numValue)) {
           dataUpdate[key] = convertValue(numValue, currentUnit, newUnit, fieldMapping[key]);
         }
-      });
-      if (element.data?.schedulePoints) {
+      }
+    });
+
+    // Handle schedulePoints
+    if (element.data?.schedulePoints) {
+      if (cachedTarget.schedulePoints) {
+        dataUpdate.schedulePoints = cachedTarget.schedulePoints;
+      } else {
         dataUpdate.schedulePoints = (element.data.schedulePoints as any[]).map(p => ({
           ...p,
           flow: convertValue(p.flow, currentUnit, newUnit, 'flow')

@@ -242,20 +242,23 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
         [nodeUnit]: { ...(existingCache[nodeUnit] || {}), ...savedForOldUnit },
       };
 
-      // Check if we have cached values for the target unit
-      const cachedTarget = newCache[unit];
-      if (cachedTarget && Object.values(cachedTarget).some(v => v !== undefined)) {
-        Object.entries(cachedTarget).forEach(([key, val]) => {
-          if (val !== undefined) dataUpdate[key] = val;
-        });
-      } else {
-        // No cache — convert mathematically
-        Object.entries(node.data || {}).forEach(([key, value]) => {
-          if ((typeof value === 'number' || (typeof value === 'string' && value.trim() !== '' && !isNaN(Number(value)))) && fieldMapping[key]) {
-            dataUpdate[key] = convertValue(value as any, nodeUnit, unit, fieldMapping[key]);
-          }
-        });
-        if (node.data?.schedulePoints) {
+      // For each convertible field: use cached value if defined, otherwise math-convert.
+      const cachedTarget: Record<string, any> = newCache[unit] || {};
+      Object.entries(node.data || {}).forEach(([key, value]) => {
+        if (!fieldMapping[key]) return;
+        const cachedVal = cachedTarget[key];
+        if (cachedVal !== undefined) {
+          dataUpdate[key] = cachedVal;
+        } else if (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '' && !isNaN(Number(value)))) {
+          dataUpdate[key] = convertValue(value as any, nodeUnit, unit, fieldMapping[key]);
+        }
+      });
+
+      // Handle schedulePoints
+      if (node.data?.schedulePoints) {
+        if (cachedTarget.schedulePoints) {
+          dataUpdate.schedulePoints = cachedTarget.schedulePoints;
+        } else {
           dataUpdate.schedulePoints = (node.data.schedulePoints as any[]).map(p => ({
             ...p,
             flow: convertValue(p.flow, nodeUnit, unit, 'flow')
@@ -294,18 +297,17 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
         [edgeUnit]: { ...(existingCache[edgeUnit] || {}), ...savedForOldUnit },
       };
 
-      const cachedTarget = newCache[unit];
-      if (cachedTarget && Object.values(cachedTarget).some(v => v !== undefined)) {
-        Object.entries(cachedTarget).forEach(([key, val]) => {
-          if (val !== undefined) dataUpdate[key] = val;
-        });
-      } else {
-        Object.entries(edge.data || {}).forEach(([key, value]) => {
-          if ((typeof value === 'number' || (typeof value === 'string' && value.trim() !== '' && !isNaN(Number(value)))) && fieldMapping[key]) {
-            dataUpdate[key] = convertValue(value as any, edgeUnit, unit, fieldMapping[key]);
-          }
-        });
-      }
+      // For each convertible field: use cached value if defined, otherwise math-convert.
+      const cachedTarget: Record<string, any> = newCache[unit] || {};
+      Object.entries(edge.data || {}).forEach(([key, value]) => {
+        if (!fieldMapping[key]) return;
+        const cachedVal = cachedTarget[key];
+        if (cachedVal !== undefined) {
+          dataUpdate[key] = cachedVal;
+        } else if (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '' && !isNaN(Number(value)))) {
+          dataUpdate[key] = convertValue(value as any, edgeUnit, unit, fieldMapping[key]);
+        }
+      });
 
       if (edge.data?.unit) dataUpdate.unit = undefined;
       dataUpdate._unitCache = newCache;
