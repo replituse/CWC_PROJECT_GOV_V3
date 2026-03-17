@@ -843,22 +843,6 @@ export function PropertiesPanel() {
                     value={element.data?.celerity || 0} 
                     onChange={(e) => {
                       handleChange('celerity', e.target.value);
-                      const c = parseFloat(e.target.value);
-                      if (!isNaN(c) && c > 0) {
-                        const C0 = currentUnit === 'SI' ? 1440 : 4720;
-                        const Kw = currentUnit === 'SI' ? 2.07e9 : 3e5;
-                        const D = parseFloat(element.data?.diameter) || 0;
-                        const ratio = (C0 / c) ** 2 - 1;
-                        if (D > 0 && ratio > 0) {
-                          const WT = parseFloat(element.data?.pipeWT) || 0;
-                          const E  = parseFloat(element.data?.pipeE)  || 0;
-                          if (WT > 0) {
-                            handleChange('pipeE', parseFloat(((Kw * D) / (WT * ratio)).toFixed(2)).toString());
-                          } else if (E > 0) {
-                            handleChange('pipeWT', parseFloat(((Kw * D) / (E * ratio)).toFixed(6)).toString());
-                          }
-                        }
-                      }
                     }}
                   />
                 </div>
@@ -888,17 +872,14 @@ export function PropertiesPanel() {
                 <div>
                   <Label className="font-medium">Pipe Wall Properties (E &amp; WT)</Label>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Enter <strong>E</strong> to calculate WT, or enter <strong>WT</strong> to calculate E.
-                    Wave speed and diameter are used automatically.
+                    Enter both <strong>E</strong> and <strong>WT</strong> to calculate wave speed.
+                    Diameter is used automatically.
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="pipe-e">
                       E ({currentUnit === 'SI' ? 'Pa' : 'psi'})
-                      {element.data?.pipeWT && !element.data?.pipeE
-                        ? <span className="ml-1 text-xs text-primary">← auto</span>
-                        : null}
                     </Label>
                     <Input
                       id="pipe-e"
@@ -912,18 +893,10 @@ export function PropertiesPanel() {
                         const C0 = currentUnit === 'SI' ? 1440 : 4720;
                         const Kw = currentUnit === 'SI' ? 2.07e9 : 3e5;
                         const D  = parseFloat(element.data?.diameter) || 0;
-                        if (!isNaN(E) && E > 0 && D > 0) {
-                          const WT = parseFloat(element.data?.pipeWT) || 0;
-                          if (WT > 0) {
-                            const c = C0 / Math.sqrt(1 + (Kw / E) * (D / WT));
-                            handleChange('celerity', parseFloat(c.toFixed(4)).toString());
-                          } else {
-                            const c = parseFloat(element.data?.celerity) || 0;
-                            if (c > 0) {
-                              const ratio = (C0 / c) ** 2 - 1;
-                              if (ratio > 0) handleChange('pipeWT', parseFloat(((Kw * D) / (E * ratio)).toFixed(6)).toString());
-                            }
-                          }
+                        const WT = parseFloat(element.data?.pipeWT) || 0;
+                        if (!isNaN(E) && E > 0 && WT > 0 && D > 0) {
+                          const c = C0 / Math.sqrt(1 + (Kw / E) * (D / WT));
+                          handleChange('celerity', parseFloat(c.toFixed(4)).toString());
                         }
                       }}
                     />
@@ -931,9 +904,6 @@ export function PropertiesPanel() {
                   <div className="space-y-2">
                     <Label htmlFor="pipe-wt">
                       WT ({currentUnit === 'SI' ? 'm' : 'ft'})
-                      {element.data?.pipeE && !element.data?.pipeWT
-                        ? <span className="ml-1 text-xs text-primary">← auto</span>
-                        : null}
                     </Label>
                     <Input
                       id="pipe-wt"
@@ -948,18 +918,10 @@ export function PropertiesPanel() {
                         const C0 = currentUnit === 'SI' ? 1440 : 4720;
                         const Kw = currentUnit === 'SI' ? 2.07e9 : 3e5;
                         const D  = parseFloat(element.data?.diameter) || 0;
-                        if (!isNaN(WT) && WT > 0 && D > 0) {
-                          const E = parseFloat(element.data?.pipeE) || 0;
-                          if (E > 0) {
-                            const c = C0 / Math.sqrt(1 + (Kw / E) * (D / WT));
-                            handleChange('celerity', parseFloat(c.toFixed(4)).toString());
-                          } else {
-                            const c = parseFloat(element.data?.celerity) || 0;
-                            if (c > 0) {
-                              const ratio = (C0 / c) ** 2 - 1;
-                              if (ratio > 0) handleChange('pipeE', parseFloat(((Kw * D) / (WT * ratio)).toFixed(2)).toString());
-                            }
-                          }
+                        const E  = parseFloat(element.data?.pipeE) || 0;
+                        if (!isNaN(WT) && WT > 0 && E > 0 && D > 0) {
+                          const c = C0 / Math.sqrt(1 + (Kw / E) * (D / WT));
+                          handleChange('celerity', parseFloat(c.toFixed(4)).toString());
                         }
                       }}
                     />
