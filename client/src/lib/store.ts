@@ -184,6 +184,7 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
       celerity: 3.28084,
       area: 10.7639,
       flow: 35.3147,
+      pressure: 1 / 6894.76, // Pa to psi
     };
 
     const convertValue = (value: number | string, from: UnitSystem, to: UnitSystem, type: keyof typeof SI_TO_FPS) => {
@@ -192,7 +193,7 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
       if (from === to) return numValue;
       const factor = SI_TO_FPS[type] || 1;
       const result = to === 'FPS' ? numValue * factor : numValue / factor;
-      return parseFloat(result.toFixed(8));
+      return parseFloat(result.toPrecision(10));
     };
 
     const fieldMapping: Record<string, keyof typeof SI_TO_FPS> = {
@@ -308,6 +309,17 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
           dataUpdate[key] = convertValue(value as any, edgeUnit, unit, fieldMapping[key]);
         }
       });
+
+      // pipeE (Pa ↔ psi) and pipeWT (m ↔ ft): always convert mathematically,
+      // bypassing the cache to avoid stale values corrupting the result.
+      if (edge.data?.pipeE != null && edge.data.pipeE !== '') {
+        const val = typeof edge.data.pipeE === 'string' ? parseFloat(edge.data.pipeE) : edge.data.pipeE;
+        if (!isNaN(val)) dataUpdate.pipeE = convertValue(val, edgeUnit, unit, 'pressure');
+      }
+      if (edge.data?.pipeWT != null && edge.data.pipeWT !== '') {
+        const val = typeof edge.data.pipeWT === 'string' ? parseFloat(edge.data.pipeWT) : edge.data.pipeWT;
+        if (!isNaN(val)) dataUpdate.pipeWT = convertValue(val, edgeUnit, unit, 'diameter');
+      }
 
       if (edge.data?.unit) dataUpdate.unit = undefined;
       dataUpdate._unitCache = newCache;
