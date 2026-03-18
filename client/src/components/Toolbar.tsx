@@ -70,12 +70,20 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: st
     const edge = edges.find(e => e.id === actualId);
     const type = node ? 'node' : 'edge';
 
-    addOutputRequest({
-      elementId: actualId,
-      elementType: type,
-      isElement: mode === 'element',
-      requestType: requestType,
-      variables: selectedVars
+    const allTypes: ("HISTORY" | "PLOT" | "SPREADSHEET")[] = ["HISTORY", "PLOT", "SPREADSHEET"];
+    allTypes.forEach(reqType => {
+      const alreadyExists = outputRequests.some(
+        req => req.elementId === actualId && req.requestType === reqType && req.isElement === (mode === 'element')
+      );
+      if (!alreadyExists) {
+        addOutputRequest({
+          elementId: actualId,
+          elementType: type,
+          isElement: mode === 'element',
+          requestType: reqType,
+          variables: selectedVars
+        });
+      }
     });
   };
 

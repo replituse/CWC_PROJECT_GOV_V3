@@ -136,16 +136,24 @@ export function Header({
     const node = nodes.find((n) => n.id === actualId);
     const type = node ? "node" : "edge";
 
-    addOutputRequest({
-      elementId: actualId,
-      elementType: type,
-      isElement: mode === 'element',
-      requestType: requestType,
-      variables: selectedVars,
+    const allTypes: ("HISTORY" | "PLOT" | "SPREADSHEET")[] = ["HISTORY", "PLOT", "SPREADSHEET"];
+    allTypes.forEach(reqType => {
+      const alreadyExists = outputRequests.some(
+        req => req.elementId === actualId && req.requestType === reqType && req.isElement === (mode === 'element')
+      );
+      if (!alreadyExists) {
+        addOutputRequest({
+          elementId: actualId,
+          elementType: type,
+          isElement: mode === 'element',
+          requestType: reqType,
+          variables: selectedVars,
+        });
+      }
     });
     toast({
       title: "Request Added",
-      description: "Output request added successfully.",
+      description: "Output request added to History, Plot, and Spreadsheet.",
     });
   };
 
