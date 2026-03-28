@@ -100,7 +100,7 @@ interface PairsEditorState {
   open: boolean;
   rowId: string;
   rowKind: 'node' | 'edge';
-  pairsType: 'qSchedule' | 'hSchedule';
+  pairsType: 'qSchedule' | 'hSchedule' | 'shapePairs';
   scheduleNumber?: number;
 }
 
@@ -450,7 +450,7 @@ function RowCells({
   changeEdge: (f: string, v: string) => void;
   changeNode: (f: string, v: string) => void;
   hSchedules: any[];
-  onOpenPairsEditor: (rowId: string, rowKind: 'node' | 'edge', pairsType: 'qSchedule' | 'hSchedule', scheduleNumber?: number) => void;
+  onOpenPairsEditor: (rowId: string, rowKind: 'node' | 'edge', pairsType: 'qSchedule' | 'hSchedule' | 'shapePairs', scheduleNumber?: number) => void;
 }) {
   const d = row.data;
   const isEdge = row.kind === 'edge';
@@ -467,7 +467,7 @@ function RowCells({
   const hSched = hSchedules.find((s: any) => s.number === hSchedNum);
   const thPairs: PairPreview[] = (hSched?.points || []).map((p: any) => ({ time: p.time, value: p.head }));
   const qPairs: PairPreview[] = (d.schedulePoints as any[] || []).map((p: any) => ({ time: p.time, value: p.flow }));
-  const shapePairCount = (d.shape as any[] || []).length;
+  const shapePairs: PairPreview[] = (d.shape as any[] || []).map((p: any) => ({ time: p.e, value: p.a }));
 
   switch (col) {
     case 'rowNum': return (
@@ -491,11 +491,15 @@ function RowCells({
       <EditableCell key={col} value={!isEdge ? (d.nodeNumber ?? '') : ''} type="number"
         readOnly={isEdge} dimmed={isEdge} onChange={v => changeNode('nodeNumber', v)} testId={`cell-nodenum-${row.id}`} />
     );
-    case 'diameter': return (
-      <EditableCell key={col} value={fmt(d.diameter)} type="number"
-        readOnly={!isEdge && !isSurge} dimmed={!isEdge && !isSurge && !isConduit && !isDummy}
-        onChange={v => change('diameter', v)} testId={`cell-diameter-${row.id}`} />
-    );
+    case 'diameter': {
+      const surgeShapeActive = isSurge && d.hasShape;
+      return (
+        <EditableCell key={col} value={fmt(d.diameter)} type="number"
+          readOnly={(!isEdge && !isSurge) || surgeShapeActive}
+          dimmed={(!isEdge && !isSurge && !isConduit && !isDummy) || surgeShapeActive}
+          onChange={v => change('diameter', v)} testId={`cell-diameter-${row.id}`} />
+      );
+    }
     case 'length': return (
       <EditableCell key={col} value={isEdge && !isDummy ? fmt(d.length) : ''} type="number"
         readOnly={!isEdge || isDummy} dimmed={!isEdge || isDummy}
@@ -629,7 +633,12 @@ function RowCells({
         dimmed={!isSurge} onChange={isSurge ? v => changeNode('hasShape', String(v)) : undefined} testId={`cell-hasshape-${row.id}`} />
     );
     case 'shapePairs': return (
-      <SummaryCell key={col} count={isSurge ? shapePairCount : 0} label="pair" />
+      <PairsPreviewCell
+        key={col}
+        pairs={isSurge && d.hasShape ? shapePairs : []}
+        applicable={isSurge && !!d.hasShape}
+        onEdit={() => onOpenPairsEditor(row.id, row.kind, 'shapePairs')}
+      />
     );
     case 'schedNum': return (
       <EditableCell key={col} value={isFlow ? (d.scheduleNumber ?? '') : ''} type="number"
@@ -665,7 +674,7 @@ function UnifiedTable({
   onChangeNode: (id: string, field: string, val: string, data: any) => void;
   onSelectEdge: (id: string) => void;
   onSelectNode: (id: string) => void;
-  onOpenPairsEditor: (rowId: string, rowKind: 'node' | 'edge', pairsType: 'qSchedule' | 'hSchedule', scheduleNumber?: number) => void;
+  onOpenPairsEditor: (rowId: string, rowKind: 'node' | 'edge', pairsType: 'qSchedule' | 'hSchedule' | 'shapePairs', scheduleNumber?: number) => void;
 }) {
   const cols = COLS[filter] ?? COLS.all;
 
@@ -821,7 +830,7 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
   const handleOpenPairsEditor = useCallback((
     rowId: string,
     rowKind: 'node' | 'edge',
-    pairsType: 'qSchedule' | 'hSchedule',
+    pairsType: 'qSchedule' | 'hSchedule' | 'shapePairs',
     scheduleNumber?: number
   ) => {
     setPairsEditor({ open: true, rowId, rowKind, pairsType, scheduleNumber });
@@ -834,6 +843,10 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
       const row = allRows.find(r => r.id === pairsEditor.rowId);
       const pts = (row?.data?.schedulePoints as any[]) || [];
       return pts.map((p: any) => ({ time: String(p.time ?? 0), value: String(p.flow ?? 0) }));
+    } else if (pairsEditor.pairsType === 'shapePairs') {
+      const row = allRows.find(r => r.id === pairsEditor.rowId);
+      const pts = (row?.data?.shape as any[]) || [];
+      return pts.map((p: any) => ({ time: String(p.e ?? 0), value: String(p.a ?? 0) }));
     } else {
       const schedNum = pairsEditor.scheduleNumber || 1;
       const sched = hSchedules?.find((s: any) => s.number === schedNum);
@@ -850,13 +863,18 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
         flow: parseFloat(r.value) || 0,
       }));
       updateNodeData(pairsEditor.rowId, { schedulePoints });
+    } else if (pairsEditor.pairsType === 'shapePairs') {
+      const shape = rows.map(r => ({
+        e: parseFloat(r.time) || 0,
+        a: parseFloat(r.value) || 0,
+      }));
+      updateNodeData(pairsEditor.rowId, { shape });
     } else {
       const schedNum = pairsEditor.scheduleNumber || 1;
       const points = rows.map(r => ({
         time: parseFloat(r.time) || 0,
         head: parseFloat(r.value) || 0,
       }));
-      // Ensure the schedule exists, then update
       addHSchedule(schedNum);
       updateHSchedule(schedNum, points);
     }
@@ -865,9 +883,18 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
   const visibleChips = FILTER_CHIPS.filter(c => counts[c.key as keyof typeof counts] > 0 || c.key === 'all');
 
   // Build editor title/labels
-  const editorTitle = pairsEditor?.pairsType === 'qSchedule' ? 'Edit Q Schedule Points' : 'Edit T/H Pairs';
+  const editorTitle = pairsEditor?.pairsType === 'qSchedule'
+    ? 'Edit Q Schedule Points'
+    : pairsEditor?.pairsType === 'shapePairs'
+    ? 'Edit Shape (E, A) Pairs'
+    : 'Edit T/H Pairs';
+  const editorTimeLabel = pairsEditor?.pairsType === 'shapePairs'
+    ? `E (${globalUnit === 'FPS' ? 'ft' : 'm'})`
+    : 'Time (T)';
   const editorValueLabel = pairsEditor?.pairsType === 'qSchedule'
     ? `Flow (Q) (${globalUnit === 'FPS' ? 'ft³/s' : 'm³/s'})`
+    : pairsEditor?.pairsType === 'shapePairs'
+    ? `A (${globalUnit === 'FPS' ? 'ft²' : 'm²'})`
     : `Head (H) (${globalUnit === 'FPS' ? 'ft' : 'm'})`;
 
   return (
@@ -963,7 +990,7 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
           open={pairsEditor.open}
           onClose={() => setPairsEditor(null)}
           title={editorTitle}
-          timeLabel="Time (T)"
+          timeLabel={editorTimeLabel}
           valueLabel={editorValueLabel}
           initialPairs={editorInitialPairs}
           onSave={handleSavePairs}
