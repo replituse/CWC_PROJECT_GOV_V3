@@ -424,6 +424,7 @@ function DesignerInner() {
   };
 
   const [projectState, setProjectState] = useState<"empty" | "active">("empty");
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [isGeneratingOut, setIsGeneratingOut] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
   const [showLabels, setShowLabels] = useState(true);
@@ -435,6 +436,12 @@ function DesignerInner() {
     const handleToggleGrid = () => setShowGrid((prev) => !prev);
     window.addEventListener('toggle-grid', handleToggleGrid);
     return () => window.removeEventListener('toggle-grid', handleToggleGrid);
+  }, []);
+
+  useEffect(() => {
+    const handleFirstInteraction = () => setHasInteracted(true);
+    document.addEventListener('mousedown', handleFirstInteraction, { once: true });
+    return () => document.removeEventListener('mousedown', handleFirstInteraction);
   }, []);
 
   const handleNewProject = () => {
@@ -593,7 +600,7 @@ function DesignerInner() {
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-hidden relative">
-        {projectState === "empty" && nodes.length === 0 && edges.length === 0 && (
+        {projectState === "empty" && nodes.length === 0 && edges.length === 0 && !hasInteracted && (
           <div className="absolute inset-0 z-[100] flex items-center justify-center pointer-events-none">
             <div className="flex gap-12 pointer-events-auto">
               {/* New Project Card */}
